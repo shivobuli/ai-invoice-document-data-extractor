@@ -1,0 +1,38 @@
+INVOICE
+
+OBX Digital Solutions
+45 Salem Main Road
+Salem, Tamil Nadu 636001
+India
+
+Invoice Number: INV-2026-0017
+Invoice Date: 06 October 2026
+Due Date: 20 October 2026
+
+Bill To:
+GreenLeaf Business Services
+12 Market Street
+Coimbatore, Tamil Nadu 641018
+India
+
+Description:
+AI Workflow Automation Consultation
+Quantity: 1
+Unit Price: INR 25,000.00
+
+Description:
+Workflow Optimization and Documentation
+Quantity: 1
+Unit Price: INR 10,000.00
+
+Subtotal: INR 35,000.00
+GST (18%): INR 6,300.00
+Total Amount: INR 41,300.00
+
+Payment Status: Unpaid
+Payment Terms: Payment due within 14 days.
+
+Note:
+This is a synthetic invoice created exclusively for AI document-processing portfolio demonstration.
+
+Total word count: 98 words

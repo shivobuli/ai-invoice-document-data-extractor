@@ -1,0 +1,255 @@
+{
+  "name": "AI Invoice Document Data Extractor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-invoice-extractor",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "be0f64a1-56b4-410c-b906-6a12a84d1d12",
+      "name": "Webhook",
+      "webhookId": "d12bf048-2483-4bdd-a51d-5a76144fc9e4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.document }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "# AI Invoice / Document Data Extraction Prompt\n\nYou are an AI Document Data Extraction Agent for OBX AI Solutions.\n\nYour task is to extract structured invoice information from the supplied document.\n\n## Extraction Rules\n\n1. Use ONLY information explicitly present in the supplied document.\n2. Do not invent, assume, calculate, or infer missing information.\n3. Preserve invoice numbers, dates, names, amounts, and currencies exactly where practical.\n4. Extract monetary values as numeric values without currency symbols in the JSON fields.\n5. Identify the currency separately.\n6. If a field is not present in the document, return `null`.\n7. Extract all invoice line items that are explicitly present.\n8. Preserve the quantity and unit price for each line item.\n9. Extract subtotal, tax, total amount, payment status, and payment terms when available.\n10. Do not provide explanations outside the required JSON object.\n11. Return ONLY valid JSON.\n12. Do not use Markdown code fences.\n\n## Required JSON Structure\n\n{\n\"document_type\": \"invoice\",\n\"invoice_number\": \"string or null\",\n\"invoice_date\": \"string or null\",\n\"due_date\": \"string or null\",\n\"vendor\": {\n\"name\": \"string or null\",\n\"address\": \"string or null\"\n},\n\"customer\": {\n\"name\": \"string or null\",\n\"address\": \"string or null\"\n},\n\"currency\": \"string or null\",\n\"line_items\": [\n{\n\"description\": \"string\",\n\"quantity\": \"number or null\",\n\"unit_price\": \"number or null\"\n}\n],\n\"subtotal\": \"number or null\",\n\"tax\": \"number or null\",\n\"total_amount\": \"number or null\",\n\"payment_status\": \"string or null\",\n\"payment_terms\": \"string or null\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        160,
+        0
+      ],
+      "id": "50241a9a-b34a-4009-9955-290af3d7f116",
+      "name": "AI Invoice Data Extraction Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        128,
+        144
+      ],
+      "id": "71edfbe2-9c4d-49e1-a258-8683816ee31d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"document_type\": \"invoice\",\n  \"invoice_number\": \"INV-2026-TEST\",\n  \"invoice_date\": \"08 October 2026\",\n  \"due_date\": null,\n  \"vendor\": {\n    \"name\": \"OBX Digital Solutions\",\n    \"address\": null\n  },\n  \"customer\": {\n    \"name\": \"GreenLeaf Business Services\",\n    \"address\": null\n  },\n  \"currency\": \"INR\",\n  \"line_items\": [\n    {\n      \"description\": \"AI Workflow Automation Consultation\",\n      \"quantity\": 1,\n      \"unit_price\": 25000\n    }\n  ],\n  \"subtotal\": null,\n  \"tax\": null,\n  \"total_amount\": null,\n  \"payment_status\": null,\n  \"payment_terms\": null\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        144
+      ],
+      "id": "cd1bcd1b-5be5-4af0-8626-2489a5a4ad51",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        656,
+        -64
+      ],
+      "id": "e017cb45-8295-49c7-9f19-ee6d2168ee58",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "480fd7f0-fae1-4d1b-a97c-1af66f7800a8",
+              "leftValue": "={{ $json.output.total_amount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "00193ec8-9069-4d35-860b-835988d41078",
+      "name": "Validate Extracted Invoice"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d57ea8b-b3d8-43e2-85fe-66b5819e4abb",
+              "name": "review_status",
+              "value": "Human review required",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        656,
+        80
+      ],
+      "id": "f2fae963-6b5c-4248-a29d-8e1de5865fc6",
+      "name": "Human Review Required"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ Object.assign({}, $json.output, {review_status: $json.review_status}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        880,
+        80
+      ],
+      "id": "d259fa5f-f0d7-4243-8297-e6a7c4468e1c",
+      "name": "Respond with Review Status"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Invoice Data Extraction Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Invoice Data Extraction Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Invoice Data Extraction Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Invoice Data Extraction Agent": {
+      "main": [
+        [
+          {
+            "node": "Validate Extracted Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Extracted Invoice": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Human Review Required",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Review Required": {
+      "main": [
+        [
+          {
+            "node": "Respond with Review Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3a66e21d-98f1-4b1e-bfda-17369facb9a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c195bc43118db9e5e029fb58e650718b391a1aba12866c6de60247e16f625182"
+  },
+  "nodeGroups": [],
+  "id": "2lJJGyj7NDSz7Rik",
+  "tags": []
+}
