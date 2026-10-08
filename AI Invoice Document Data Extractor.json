@@ -247,8 +247,8 @@
   "versionId": "3a66e21d-98f1-4b1e-bfda-17369facb9a3",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "c195bc43118db9e5e029fb58e650718b391a1aba12866c6de60247e16f625182"
-  },
+     "templateCredsSetupCompleted": true
+}`
   "nodeGroups": [],
   "id": "2lJJGyj7NDSz7Rik",
   "tags": []
