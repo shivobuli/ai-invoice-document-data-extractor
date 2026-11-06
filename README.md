@@ -1,410 +1,226 @@
-AI Invoice / Document Data Extractor
+# AI Invoice & Document Data Extractor
 
+An AI-powered document data extraction and validation workflow built with **n8n, AI Agents, and structured JSON output**.
 
+The workflow receives invoice or document text through a webhook, extracts key information using an AI Agent, validates the extracted total amount, and routes incomplete records for human review.
 
-An AI-powered document data extraction workflow built with n8n. The workflow accepts invoice/document text through a webhook, uses an AI Agent to extract structured information, validates the extracted data, and routes incomplete documents for human review.
+**Project Status:** Complete · Portfolio Version Frozen  
+**Platform:** n8n  
+**AI Model:** OpenAI GPT-5 mini via n8n Gateway credits
 
+---
 
+## 1. Project Overview
 
-Project Overview
+Businesses frequently handle invoices containing important financial and operational information in semi-structured formats. Manually reviewing and entering these details can be repetitive and time-consuming.
 
+This project demonstrates how an AI-powered workflow can:
 
-
-Businesses often receive invoices and documents containing important information in semi-structured text. Manually entering this information into systems can be repetitive and time-consuming.
-
-
-
-This project demonstrates how AI automation can convert invoice text into a consistent structured JSON record while applying a validation step and human-review fallback.
-
-
+- Extract structured information from invoice text.
+- Organize extracted data into a consistent JSON format.
+- Identify missing or incomplete information.
+- Apply a basic validation rule.
+- Route incomplete records for human review.
 
 The project is designed as a lightweight portfolio demonstration using synthetic invoice data.
 
-
-
-Workflow Architecture
-
-Invoice / Document
-
-&#x20;       ↓
-
-Webhook
-
-&#x20;       ↓
-
-AI Invoice Data Extraction Agent
-
-&#x20;       ↓
-
-Structured JSON
-
-&#x20;       ↓
-
-Validate Extracted Invoice
-
-&#x20;       ↓
-
-&#x20;  ┌────┴────┐
-
-&#x20;  ↓         ↓
-
-Valid     Incomplete
-
-&#x20;  ↓         ↓
-
-Response   Human Review
-
-&#x20;           Required
-
-Key Features
-
-Webhook-based document input
-
-AI-powered invoice information extraction
-
-Structured JSON output
-
-Extraction of multiple invoice line items
-
-Separate vendor and customer information
-
-Currency identification
-
-Subtotal, tax, and total extraction
-
-Payment status and payment terms extraction
-
-Missing-field handling using null
-
-Validation of extracted invoice data
-
-Human-review routing for incomplete documents
-
-Synthetic test data for safe portfolio demonstration
-
-No external paid API key required for the demonstrated workflow
-
-Extracted Fields
-
-
-
-The workflow extracts:
-
-
-
-Document type
-
-Invoice number
-
-Invoice date
-
-Due date
-
-Vendor name and address
-
-Customer name and address
-
-Currency
-
-Line-item descriptions
-
-Quantity
-
-Unit price
-
-Subtotal
-
-Tax
-
-Total amount
-
-Payment status
-
-Payment terms
-
-Validation Logic
-
-
-
-After the AI Agent produces the structured invoice data, the workflow checks whether a valid positive total amount has been extracted.
-
-
-
-If:
-
-
-
-total\_amount > 0
-
-
-
-the invoice follows the normal response path.
-
-
-
-If the total amount is missing or invalid, the workflow routes the document to the human-review path and adds:
-
-
-
+## 2. Workflow Architecture
+
+```mermaid
+flowchart TD
+    A["Invoice / Document Text"] --> B["Webhook"]
+    B --> C["AI Invoice Data Extraction Agent"]
+    C --> D["Structured JSON Output"]
+    D --> E["Validate Extracted Invoice"]
+    E --> F{"Total Amount > 0?"}
+    F -->|Yes| G["Successful Response"]
+    F -->|No| H["Human Review Required"]
+```
+
+## 3. Key Features
+
+- Webhook-based document input.
+- AI-powered invoice information extraction.
+- Structured JSON generation.
+- Multiple invoice line-item extraction.
+- Vendor and customer information separation.
+- Currency identification.
+- Subtotal, tax, and total amount extraction.
+- Payment status and payment terms extraction.
+- Missing-field handling using `null`.
+- Basic extracted-data validation.
+- Human-review fallback for incomplete invoices.
+- Synthetic test data for safe portfolio demonstration.
+- No separately configured paid API key required for the demonstrated workflow.
+
+## 4. Extracted Data Fields
+
+The workflow is designed to extract the following information:
+
+| Category | Extracted fields |
+|---|---|
+| Document | Document type, invoice number |
+| Dates | Invoice date, due date |
+| Vendor | Vendor name and address |
+| Customer | Customer name and address |
+| Financial | Currency, subtotal, tax, total amount |
+| Line items | Description, quantity, unit price |
+| Payment | Payment status, payment terms |
+
+Missing information is represented using `null` rather than being intentionally fabricated.
+
+## 5. Validation & Human Review
+
+After the AI Agent generates the structured invoice data, the workflow checks whether the extracted total amount is a valid positive value.
+
+**Validation condition:**
+
+```javascript
+total_amount > 0
+```
+
+**Valid invoice:**
+- Continues through the normal response path.
+- Returns the extracted invoice information.
+
+**Incomplete or invalid invoice:**
+- Routes to the human-review path.
+- Preserves the extracted information.
+- Adds the review status:
+
+```json
 {
-
-&#x20; "review\_status": "Human review required"
-
+  "review_status": "Human review required"
 }
+```
 
+This introduces a basic human-in-the-loop approach instead of automatically treating every AI-generated result as reliable.
 
+## 6. Technology Stack
 
-This demonstrates a basic human-in-the-loop pattern where automation does not blindly process incomplete information.
+| Technology | Purpose |
+|---|---|
+| n8n | Workflow orchestration |
+| AI Agent | Invoice information extraction |
+| OpenAI GPT-5 mini | AI processing |
+| Structured Output Parser | JSON output structure |
+| Webhook | Input and workflow triggering |
+| Conditional logic | Validation and routing |
+| JSON | Structured data representation |
+| PowerShell | Workflow testing |
 
+## 7. Testing & Results
 
+The workflow was tested using two synthetic invoice scenarios.
 
-Technology Stack
+### Test 1 — Complete Invoice
 
-n8n
+**Input:** A synthetic invoice containing invoice details, vendor and customer information, two line items, subtotal, GST, total amount, payment status, and payment terms.
 
-AI Agent
+**Result:** Successful structured extraction.
 
-OpenAI GPT-5 mini through n8n Gateway credits
+The workflow returned the expected invoice information in structured JSON format.
 
-Structured Output Parser
+### Test 2 — Incomplete Invoice
 
-Webhook
+**Input:** A deliberately incomplete invoice with several missing fields, including due date, subtotal, tax, total amount, payment status, and payment terms.
 
-Conditional validation
+**Result:** Human-review path triggered successfully.
 
-JSON
+The workflow preserved the available extracted information and returned:
 
-PowerShell for workflow testing
+```json
+{
+  "review_status": "Human review required"
+}
+```
 
-Current Scope
+**Testing outcome:** Both test scenarios completed successfully.
 
+## 8. Current Scope & Limitations
 
+The current implementation accepts invoice or document text through a webhook.
 
-The current implementation accepts document text through a webhook.
+The following capabilities are not included in this portfolio version:
 
+- Direct PDF parsing.
+- Image processing and OCR.
+- Handwritten invoice recognition.
+- Email attachment ingestion.
+- Accounting software integration.
+- Automatic database storage.
+- Automatic human-review notifications.
+- Comprehensive financial reconciliation.
 
+These are potential extensions rather than existing features.
 
-It does not currently perform:
+## 9. Potential Business Applications
 
+This workflow could serve as a foundation for businesses that want to reduce repetitive invoice data-entry tasks.
 
+A possible future implementation could include:
 
-PDF parsing
+```mermaid
+flowchart TD
+    A["Email / Document Upload"] --> B["PDF or Image Extraction"]
+    B --> C["OCR if Required"]
+    C --> D["AI Invoice Extraction"]
+    D --> E["Data Validation"]
+    E --> F{"Valid?"}
+    F -->|Yes| G["Database / Accounting System"]
+    F -->|No| H["Human Approval"]
+```
 
-Image processing
+This represents a proposed future architecture, not the current implementation.
 
-OCR
+## 10. Future Enhancements
 
-Handwritten invoice recognition
+Possible development improvements include:
 
-Email attachment ingestion
+- PDF and image-based invoice processing.
+- OCR integration.
+- Email attachment processing.
+- Database and Google Sheets integration.
+- Accounting and ERP system connectivity.
+- Duplicate-invoice detection.
+- Extraction confidence scoring.
+- Human approval workflows.
+- Email or Slack notifications for review cases.
 
-Accounting-system integration
+## 11. Data Privacy
 
-Automatic database storage
+All invoice information included in this repository is synthetic.
 
-Automatic human notification
+No real customer invoices, financial records, payment information, or personally identifiable business data are included in the portfolio demonstration.
 
-
-
-These can be added as future extensions.
-
-
-
-Testing
-
-
-
-The workflow was tested with two synthetic invoice scenarios.
-
-
-
-Test 1 — Complete Invoice
-
-
-
-A complete synthetic invoice containing invoice details, vendor information, customer information, two line items, subtotal, GST, total amount, payment status, and payment terms was submitted.
-
-
-
-Result: Successful structured extraction.
-
-
-
-The workflow correctly extracted the invoice number, dates, vendor, customer, currency, line items, subtotal, tax, total amount, payment status, and payment terms.
-
-
-
-Test 2 — Incomplete Invoice
-
-
-
-A deliberately incomplete synthetic invoice was submitted without several fields including due date, subtotal, tax, total amount, payment status, and payment terms.
-
-
-
-Result: Human-review path triggered successfully.
-
-
-
-The extracted information was preserved and the workflow returned:
-
-
-
-review\_status: Human review required
-
-
-
-This confirms that the validation and human-review fallback are functioning.
-
-
-
-Example Use Case
-
-
-
-A small business could extend this workflow to process invoices received through email or a document-upload system.
-
-
-
-A future production architecture could look like:
-
-
-
-Email / Upload
-
-&#x20;     ↓
-
-PDF / Image / Document Extraction
-
-&#x20;     ↓
-
-OCR if Required
-
-&#x20;     ↓
-
-AI Invoice Extraction
-
-&#x20;     ↓
-
-Validation
-
-&#x20;     ↓
-
-&#x20;  ┌──┴──┐
-
-&#x20;  ↓     ↓
-
-Valid  Review
-
-&#x20;  ↓     ↓
-
-Database  Human
-
-&#x20;  ↓
-
-Accounting / ERP
-
-Portfolio Value
-
-
-
-This project demonstrates practical AI automation beyond simple text generation.
-
-
-
-It shows:
-
-
-
-AI Agent usage
-
-Structured output generation
-
-Document intelligence
-
-Data extraction
-
-Validation logic
-
-Conditional workflow routing
-
-Human-in-the-loop automation
-
-Webhook-based integration
-
-Handling of incomplete information
-
-
-
-The project is intentionally lightweight and uses synthetic data so that the workflow can be demonstrated without exposing real financial or customer information.
-
-
-
-Data Privacy
-
-
-
-All invoice information used in this portfolio project is synthetic.
-
-
-
-No real customer invoices, financial records, payment information, or personally identifiable business data are included.
-
-
-
-Future Improvements
-
-
-
-Potential extensions include:
-
-
-
-PDF and image invoice input
-
-OCR integration
-
-Email attachment processing
-
-Database storage
-
-Google Sheets or CRM integration
-
-Accounting software integration
-
-Automatic duplicate-invoice detection
-
-Confidence scoring
-
-Human approval workflow
-
-Email or Slack notification for review cases
-
-Project Status
-
-
-
-Status: Complete / Frozen
-
-
-
-The core n8n workflow has been tested successfully with both complete and incomplete invoice scenarios.
-
-
-
-The workflow is currently frozen as the portfolio version.
-
-
-
-Project: AI Invoice / Document Data Extractor
-
-Platform: n8n
-
-Input: Invoice/document text
-
-Output: Structured JSON
-
-Validation: Automated validation + human-review fallback
-
-Data: Synthetic portfolio data
-
+## 12. What This Project Demonstrates
+
+This project showcases practical AI automation capabilities, including:
+
+- AI Agent implementation.
+- Structured output generation.
+- Document data extraction.
+- Workflow orchestration.
+- Conditional validation.
+- Exception handling.
+- Human-in-the-loop workflow design.
+- Webhook-based integration.
+- Testing with complete and incomplete input scenarios.
+
+## 13. Project Information
+
+| Detail | Description |
+|---|---|
+| Project | AI Invoice & Document Data Extractor |
+| Platform | n8n |
+| Input | Invoice / document text |
+| Processing | AI-powered structured extraction |
+| Output | JSON |
+| Validation | Positive total amount check |
+| Exception handling | Human-review fallback |
+| Test data | Synthetic |
+| Status | Complete / Frozen |
+
+---
+
+**Note:** This repository represents a tested portfolio implementation. It is not presented as a production-ready accounting or financial reconciliation system.
